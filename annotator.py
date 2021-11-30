@@ -1,5 +1,5 @@
 import webdataset as wds
-from PIL import Image
+from PIL import Image, ImageFilter
 import io
 import os
 import time
@@ -92,7 +92,7 @@ for i, d in enumerate(dl):
         c = 0
         for ii in range(vertical_row_number):
             for jj in range(horizontal_row_number):
-                axarr[ii, jj].imshow(Image.open(io.BytesIO(d[0][c])))
+                axarr[ii, jj].imshow(Image.open(io.BytesIO(d[0][c])).filter(ImageFilter.BoxBlur(10)))
                 axarr[ii, jj].set_xticklabels([])
                 axarr[ii, jj].set_yticklabels([])
                 axarr[ii, jj].axis('off')

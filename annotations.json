@@ -1,5 +1,5 @@
 {
-    "current_batch": 312,
+    "current_batch": 332,
     "dataset_size": {
         "watermark_aligned.tar.gz": 76543
     },
@@ -150,10 +150,17 @@
         "./data/clear/00000/000009454",
         "./data/clear/00000/000009725",
         "./data/clear/00003/000030484",
+        "./data/clear/00003/000030789",
         "./data/clear/00003/000031681",
+        "./data/clear/00003/000031813",
+        "./data/clear/00003/000033608",
         "./data/clear/00003/000034093",
+        "./data/clear/00003/000034987",
         "./data/clear/00003/000035404",
-        "./data/clear/00003/000038018"
+        "./data/clear/00003/000037362",
+        "./data/clear/00003/000038018",
+        "./data/clear/00003/000038172",
+        "./data/clear/00003/000038733"
     ],
     "nsfw": []
 }
