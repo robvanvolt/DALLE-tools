@@ -26,6 +26,9 @@ possible_annotations = input()
 possible_annotations = 'watermark,nsfw' if possible_annotations == '' else possible_annotations
 possible_annotations = possible_annotations.split(',')
 
+print('Starting page (default 0 or the value in annotations.json).')
+starting_page = input()
+
 def save_dict(mydict):
     for annotation in possible_annotations:
         mydict[annotation] = sorted(list(mydict[annotation]))
@@ -86,6 +89,11 @@ else:
     total = annotations['dataset_size'][webdataset_filepath]
 
 substract = 0
+total_pages = int(total/bs)
+
+if starting_page != '':
+    starting_page = int(starting_page)
+    annotations['current_batch'] = starting_page
 
 for i, d in enumerate(dl):
     if i >= annotations['current_batch']:
@@ -168,7 +176,7 @@ for i, d in enumerate(dl):
                                 labelbottom=False)
                             f.canvas.draw()
                         c += 1
-                plt.suptitle('Annotator v1.0 - Page {} - Image {} out of {} ({:.2f}%) - {} {:.2f}% - Remaining {}'.format(i, i*bs, total, 100*i*bs/total, current_key, annotations_length_percent, time.strftime("%H:%M:%S", time.gmtime(remaining_time))))
+                plt.suptitle('Annotator v1.0 - Page {} - Image {} out of {} ({:.2f}%) - {} {:.2f}% - Remaining {}'.format(i, total_pages, i*bs, total, 100*i*bs/total, current_key, annotations_length_percent, time.strftime("%H:%M:%S", time.gmtime(remaining_time))))
                 f.canvas.draw()
 
         f.canvas.mpl_connect('button_press_event', onclick)
@@ -183,7 +191,7 @@ for i, d in enumerate(dl):
         seen = (i+1)*bs
         annotations_length_percent = 100*annotations_length/seen
 
-        plt.suptitle('Annotator v1.0 - Page {} - Image {} out of {} ({:.2f}%) - {} {:.2f}% - Remaining {}'.format(i, i*bs, total, 100*i*bs/total, current_key, annotations_length_percent, time.strftime("%H:%M:%S", time.gmtime(remaining_time))))
+        plt.suptitle('Annotator v1.0 - Page {}/{} - Image {} out of {} ({:.2f}%) - {} {:.2f}% - Remaining {}'.format(i, total_pages, i*bs, total, 100*i*bs/total, current_key, annotations_length_percent, time.strftime("%H:%M:%S", time.gmtime(remaining_time))))
         plt.tight_layout()
         plt.show()
 
