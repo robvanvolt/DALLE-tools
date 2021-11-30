@@ -42,6 +42,7 @@ try:
             annotations[annotation] = set()
 except Exception as e:
     print(e)
+    print('Creating new file for annotations (annotations.json).')
     annotations = {
         'current_batch': 0,
         'dataset_size': {}
@@ -50,9 +51,9 @@ except Exception as e:
         annotations[annotation] = set()
     save_dict(annotations)
 
-print('Specify the path to the file you want to annotate (default is the first dataset in annotations.json, if it exists).')
+print('Specify the path to the .tar(.gz) file you want to annotate (default is the first dataset in annotations.json, if it exists).')
 webdataset_filepath = input()
-if webdataset_filepath == '' and len(annotations['dataset_size']):
+if webdataset_filepath == '' and len(annotations['dataset_size']) > 0:
     webdataset_filepath = list(annotations['dataset_size'].keys())[0]
 assert os.path.isfile(webdataset_filepath), 'The specified file ({}) is not a valid .tar(.gz) file.'.format(webdataset_filepath)
 
@@ -78,6 +79,8 @@ def return_next_key(current_key):
 if webdataset_filepath not in annotations['dataset_size']:
     print('Counting dataset length of {}'.format(webdataset_filepath))
     annotations['dataset_size'][webdataset_filepath] = len([1 for _ in dataset])
+    total = annotations['dataset_size'][webdataset_filepath]
+    print('Finished counting dataset length!')
     save_dict(annotations)
 else:
     total = annotations['dataset_size'][webdataset_filepath]
