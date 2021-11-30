@@ -1,10 +1,13 @@
 import webdataset as wds
 import os
 
-tar_filepath = 'watermark_ds_v1.tar.gz'
-cols_set = set(['jpg', 'txt'])
-
+print('Specify the tar file you want to align.')
+tar_filepath = input() # 'watermark_ds_v1.tar.gz'
 assert os.path.isfile(tar_filepath), 'The specified file ({}) is not a valid .tar(.gz) file.'.format(tar_filepath)
+
+print('Specify the keys you want to keep in the aligend .tar(.gz) file (e.g., jpg,txt for jpg and txt).')
+cols = input()
+cols_set = set(cols.split(','))
 
 ds = wds.WebDataset(tar_filepath)
 values = {}
