@@ -6,7 +6,7 @@ WebDataset tools is a github repository with useful tools to categorize, annotat
 
 Just clone this repository to your folder and use one of the following commands in the section underneath.
 
-### WebDataset aligner
+### WebDataset Annotator
 
 ```python
 python annotator.py
