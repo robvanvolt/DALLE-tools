@@ -21,9 +21,9 @@ print('Specify the image key in your dataset (default: img).')
 webdataset_imagekey = input()
 webdataset_imagekey = 'img' if webdataset_imagekey == '' else webdataset_imagekey
 
-print('Specify the possible, comma separated annotation categories (default: watermark,nsfw).')
+print('Specify the possible, comma separated annotation categories (default: watermark,no_watermark).')
 possible_annotations = input()
-possible_annotations = 'watermark,nsfw' if possible_annotations == '' else possible_annotations
+possible_annotations = 'no_watermark,watermark' if possible_annotations == '' else possible_annotations
 possible_annotations = possible_annotations.split(',')
 
 print('Starting page (default 0 or the value in annotations.json).')
