@@ -1,0 +1,9 @@
+{
+    "current_batch": 0,
+    "dataset_size": {
+        "watermark_aligned.tar.gz": 76543
+    },
+    "no_watermark": [],
+    "watermark": [],
+    "no_watermark_but_text": []
+}

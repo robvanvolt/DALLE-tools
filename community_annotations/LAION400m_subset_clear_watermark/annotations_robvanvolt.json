@@ -1,5 +1,5 @@
 {
-    "current_batch": 1193,
+    "current_batch": 1200,
     "dataset_size": {
         "watermark_aligned.tar.gz": 76543
     },
@@ -713,5 +713,6 @@
         "./data/watermark/00000/000009402",
         "./data/watermark/00000/000009680"
     ],
-    "no_watermark": []
+    "no_watermark": [],
+    "no_watermark_but_text": []
 }
