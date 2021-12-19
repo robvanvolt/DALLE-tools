@@ -4,6 +4,7 @@ import sys
 import time
 import json
 import torch
+from itertools import islice
 import webdataset as wds
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -20,7 +21,7 @@ if __name__ == '__main__':
     print('Press <f>, <j> or <space> to annotate the current image to the respective category')
     print('(f: 1st category, j: second category, space: third category), press <c> to change ')
     print('the shwon annotation category. The annotations json file is saved automatically.')
-    print('Press <q> to quit the annotation.')
+    print('Press <q> to quit the annotation and <b> to go to the previous image.')
     print()
 
     event_dict = {'f': 0, 'j': 1, ' ': 2}
@@ -38,6 +39,8 @@ if __name__ == '__main__':
     possible_annotations = input()
     possible_annotations = 'watermark,no_watermark_but_text,no_watermark' if possible_annotations == '' else possible_annotations
     possible_annotations = possible_annotations.split(',')
+    current_key = possible_annotations[0]
+    pressed_back = False
 
     print('Starting page (default 0 or the value in {}).'.format(default_annotations_file))
     starting_page = input()
@@ -76,16 +79,14 @@ if __name__ == '__main__':
     figure_width = 14
     figure_height = 8
 
-    current_key = possible_annotations[0]
-    bs = 1
     start = time.time()
 
     dataset = wds.WebDataset(webdataset_filepath, handler=wds.ignore_and_continue).to_tuple(webdataset_imagekey, "__key__")
     # dl = wds.WebLoader(dataset, batch_size=bs)
-    dl = torch.utils.data.DataLoader(dataset, num_workers=1, batch_size=bs)
+    dl = torch.utils.data.DataLoader(dataset, num_workers=1, batch_size=1)
 
-    def return_next_key(current_key):
-        current_index = possible_annotations.index(current_key)
+    def return_next_key(ck):
+        current_index = possible_annotations.index(ck)
         if current_index + 1 == len(possible_annotations):
             return possible_annotations[0]
         else:
@@ -101,64 +102,84 @@ if __name__ == '__main__':
         total = annotations['dataset_size'][webdataset_filepath]
 
     substract = 0
-    total_pages = int(total/bs)
+    total_pages = int(total)
+
+    last_keypress = ''
+    last_id = ''
+    last_annotation = ''
 
     if starting_page != '':
         starting_page = int(starting_page)
         annotations['current_batch'] = starting_page
 
-    for i, d in enumerate(dl):
-        if i >= annotations['current_batch']:
-            
-            f = plt.figure(figsize=(figure_width, figure_height))
-            plt.imshow(Image.open(io.BytesIO(d[0][0])))
-            plt.axis('off')
+    i = int(annotations['current_batch'])
 
-            c = 0
+    while i < total:
+        dl_iter = iter(islice(dl, i, total))
+        pressed_back = False
+        while pressed_back == False:
+            try: 
+                d = next(dl_iter)
+                i += 1
+            except Exception as e:
+                print(e)
+                break
+            else:                    
+                f = plt.figure(figsize=(figure_width, figure_height))
+                plt.imshow(Image.open(io.BytesIO(d[0][0])))
+                plt.axis('off')
 
-            def on_press(event):
-                if event.key == 'q':
-                    sys.exit()
-
-                if event.key == 'c':
+                def on_press(event):
                     global current_key
-                    current_key = return_next_key(current_key)
-                    annotations_length = len(annotations[current_key])
-                    seen = (i+1)*bs
-                    annotations_length_percent = 100*annotations_length/seen
-                    plt.title('Annotator v1.0 - Page {}/{} - Image {} out of {} ({:.2f}%) - {} {:.2f}% - Remaining {}'.format(
-                        i, total_pages, i*bs, total, 100*i*bs/total, current_key, annotations_length_percent, time.strftime("%H:%M:%S", time.gmtime(remaining_time))))
-                    f.canvas.draw()
 
-                global event_dict
+                    if event.key == 'q':
+                        sys.exit()
 
-                if event.key in event_dict.keys():
-                    assign_to_key = possible_annotations[event_dict[event.key]]
-                    if type(annotations[assign_to_key]) != 'set':
-                        annotations[assign_to_key] = set(annotations[assign_to_key])
-                    annotations[assign_to_key].add(d[1][0])
-                    plt.close()
-            
-            f.canvas.mpl_connect('key_press_event', on_press)
+                    if event.key == 'b':
+                        global i, annotations, pressed_back
+                        i = i - 2
+                        annotations['current_batch'] = annotations['current_batch'] - 1
+                        pressed_back = True
+                        plt.close()
 
-            if i-substract != 0:
-                remaining_time = (time.time()-start)/(i-substract) * (total - i*bs)/bs
-            else:
-                remaining_time = 0
+                    if event.key == 'c':
+                        current_key = return_next_key(current_key)
+                        annotations_length = len(annotations[current_key])
+                        seen = i+1
+                        annotations_length_percent = 100*annotations_length/seen
+                        plt.title('Annotator v1.0 - Page {}/{} - Image {} out of {} ({:.2f}%) - {} {:.2f}% - Remaining {}'.format(
+                            i, total_pages, i, total, 100*i/total, current_key, annotations_length_percent, time.strftime("%H:%M:%S", time.gmtime(remaining_time))))
+                        f.canvas.draw()
 
-            annotations_length = len(annotations[current_key])
-            seen = (i+1)*bs
-            annotations_length_percent = 100*annotations_length/seen
+                    global event_dict
 
-            plt.title('Annotator v1.0 - Page {}/{} - Image {} out of {} ({:.2f}%) - {} {:.2f}% - Remaining {}'.format(
-                i, total_pages, i*bs, total, 100*i*bs/total, current_key, annotations_length_percent, time.strftime("%H:%M:%S", time.gmtime(remaining_time))))
-            plt.tight_layout()
-            if hasattr(sys, 'getwindowsversion'):
-                figManager = plt.get_current_fig_manager()
-                figManager.window.showMaximized()
-            plt.show()
+                    if event.key in event_dict.keys():
+                        assign_to_key = possible_annotations[event_dict[event.key]]
+                        if type(annotations[assign_to_key]) != 'set':
+                            annotations[assign_to_key] = set(annotations[assign_to_key])
+                        for k in possible_annotations:
+                            if d[1][0] in annotations[k]:
+                                annotations[k].remove(d[1][0])
+                        annotations[assign_to_key].add(d[1][0])
+                        annotations['current_batch'] += 1
+                        plt.close()
+                
+                f.canvas.mpl_connect('key_press_event', on_press)
 
-            annotations['current_batch'] += 1
-            save_dict(annotations)
-        else:
-            substract += 1
+                if i-substract != 0:
+                    remaining_time = (time.time()-start)/(i-substract) * (total - i)
+                else:
+                    remaining_time = 0
+
+                annotations_length = len(annotations[current_key])
+                seen = i+1
+                annotations_length_percent = 100*annotations_length/seen
+
+                plt.title('Annotator v1.0 - Page {}/{} - Image {} out of {} ({:.2f}%) - {} {:.2f}% - Remaining {}'.format(
+                    i, total_pages, i, total, 100*i/total, current_key, annotations_length_percent, time.strftime("%H:%M:%S", time.gmtime(remaining_time))))
+                plt.tight_layout()
+                if hasattr(sys, 'getwindowsversion'):
+                    figManager = plt.get_current_fig_manager()
+                    figManager.window.showMaximized()
+                plt.show()
+                save_dict(annotations)
