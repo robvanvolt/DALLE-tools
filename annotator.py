@@ -70,8 +70,8 @@ if __name__ == '__main__':
 
     figure_width = 14
     figure_height = 8
-    vertical_row_number = 4
-    horizontal_row_number = 8
+    vertical_row_number = 3
+    horizontal_row_number = 6
 
     current_key = possible_annotations[0]
     bs = vertical_row_number * horizontal_row_number
@@ -210,6 +210,8 @@ if __name__ == '__main__':
             plt.suptitle('Annotator v1.0 - Page {}/{} - Image {} out of {} ({:.2f}%) - {} {:.2f}% - Remaining {}'.format(
                 i, total_pages, i*bs, total, 100*i*bs/total, current_key, annotations_length_percent, time.strftime("%H:%M:%S", time.gmtime(remaining_time))))
             plt.tight_layout()
+            figManager = plt.get_current_fig_manager()
+            figManager.window.showMaximized()
             plt.show()
 
             annotations['current_batch'] += 1
