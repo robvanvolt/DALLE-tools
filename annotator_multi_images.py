@@ -17,13 +17,9 @@ if __name__ == '__main__':
     print('###################################################')
     print()
     print('Short introduction to the WebDataset annotator:')
-    print('Press <f>, <j> or <space> to annotate the current image to the respective category')
-    print('(f: 1st category, j: second category, space: third category), press <c> to change ')
-    print('the shwon annotation category. The annotations json file is saved automatically.')
-    print('Press <q> to quit the annotation.')
+    print('Press <space> to switch to the next page, <c> to change the annotation category or')
+    print('click on the image to add it to the current cateogry and save it in the annotations json file.')
     print()
-
-    event_dict = {'f': 0, 'j': 1, ' ': 2}
 
     print('What is your (the annotator) name? The name gets appended to the annotations.json filename. (Default: kendrick)')
     annotator = input()
@@ -34,9 +30,9 @@ if __name__ == '__main__':
     webdataset_imagekey = input()
     webdataset_imagekey = 'img' if webdataset_imagekey == '' else webdataset_imagekey
 
-    print('Specify the possible, comma separated annotation categories (default: watermark,no_watermark_but_text,no_watermark).')
+    print('Specify the possible, comma separated annotation categories (default: watermark,no_watermark).')
     possible_annotations = input()
-    possible_annotations = 'watermark,no_watermark_but_text,no_watermark' if possible_annotations == '' else possible_annotations
+    possible_annotations = 'watermark,no_watermark' if possible_annotations == '' else possible_annotations
     possible_annotations = possible_annotations.split(',')
 
     print('Starting page (default 0 or the value in {}).'.format(default_annotations_file))
@@ -75,9 +71,11 @@ if __name__ == '__main__':
 
     figure_width = 14
     figure_height = 8
+    vertical_row_number = 3
+    horizontal_row_number = 6
 
     current_key = possible_annotations[0]
-    bs = 1
+    bs = vertical_row_number * horizontal_row_number
     start = time.time()
 
     dataset = wds.WebDataset(webdataset_filepath, handler=wds.ignore_and_continue).to_tuple(webdataset_imagekey, "__key__")
@@ -109,36 +107,96 @@ if __name__ == '__main__':
 
     for i, d in enumerate(dl):
         if i >= annotations['current_batch']:
-            
-            f = plt.figure(figsize=(figure_width, figure_height))
-            plt.imshow(Image.open(io.BytesIO(d[0][0])))
-            plt.axis('off')
+            f, axarr = plt.subplots(
+                vertical_row_number, horizontal_row_number, figsize=(figure_width, figure_height)) 
 
             c = 0
+            for ii in range(vertical_row_number):
+                for jj in range(horizontal_row_number):
+                    axarr[ii, jj].imshow(Image.open(io.BytesIO(d[0][c])))
+                    axarr[ii, jj].set_xticklabels([])
+                    axarr[ii, jj].set_yticklabels([])
+                    axarr[ii, jj].axis('off')
+                    if d[1][c] in annotations[current_key]:
+                        axarr[ii, jj].axis('on')
+                        axarr[ii, jj].patch.set_edgecolor('red')  
+                        axarr[ii, jj].patch.set_linewidth('5')
+                        axarr[ii, jj].tick_params(
+                            which='both',
+                            bottom=False,
+                            left=False,
+                            right=False,
+                            top=False,
+                            labelbottom=False)
+                        f.canvas.draw()
+                    c += 1
 
+            def onclick(event):
+                for inner_i, ax in enumerate(axarr.flatten()):
+                    if ax == event.inaxes:
+                        if d[1][inner_i] in annotations[current_key]:
+                            annotations[current_key].remove(d[1][inner_i])
+                            ax.axis('off')
+                            ax.patch.set_edgecolor('red')  
+                            ax.patch.set_linewidth('0')
+                            f.canvas.draw()
+                        else:
+                            ax.axis('on')
+                            ax.patch.set_edgecolor('red')  
+                            ax.patch.set_linewidth('5')
+                            ax.tick_params(
+                                which='both',
+                                bottom=False,
+                                left=False,
+                                right=False,
+                                top=False,
+                                labelbottom=False)
+                            f.canvas.draw()
+                            if type(annotations[current_key]) != 'set':
+                                annotations[current_key] = set(annotations[current_key])
+                            annotations[current_key].add(d[1][inner_i])
+                        save_dict(annotations)
+            
             def on_press(event):
-                if event.key == 'q':
-                    sys.exit()
-
-                if event.key == 'c':
+                if event.key == ' ':
+                    plt.close()
+                if event.key in ['c', '1', '2', '3']:
                     global current_key
-                    current_key = return_next_key(current_key)
+                    if event.key == 'c':
+                        current_key = return_next_key(current_key)
+                    else:
+                        current_key = possible_annotations[int(event.key)-1]
                     annotations_length = len(annotations[current_key])
                     seen = (i+1)*bs
                     annotations_length_percent = 100*annotations_length/seen
-                    plt.title('Annotator v1.0 - Page {}/{} - Image {} out of {} ({:.2f}%) - {} {:.2f}% - Remaining {}'.format(
+                    c = 0
+                    for ii in range(vertical_row_number):
+                        for jj in range(horizontal_row_number):
+                            axarr[ii, jj].imshow(Image.open(io.BytesIO(d[0][c])))
+                            axarr[ii, jj].set_xticklabels([])
+                            axarr[ii, jj].set_yticklabels([])
+                            axarr[ii, jj].axis('off')
+                            if d[1][c] in annotations[current_key]:
+                                axarr[ii, jj].axis('on')
+                                axarr[ii, jj].patch.set_edgecolor('red')  
+                                axarr[ii, jj].patch.set_linewidth('5')
+                                axarr[ii, jj].tick_params(
+                                    which='both',
+                                    bottom=False,
+                                    left=False,
+                                    right=False,
+                                    top=False,
+                                    labelbottom=False)
+                                f.canvas.draw()
+                            c += 1
+                    print(annotations_length_percent)
+                    plt.suptitle('Annotator v1.0 - Page {}/{} - Image {} out of {} ({:.2f}%) - {} {:.2f}% - Remaining {}'.format(
                         i, total_pages, i*bs, total, 100*i*bs/total, current_key, annotations_length_percent, time.strftime("%H:%M:%S", time.gmtime(remaining_time))))
+                    # plt.suptitle('Annotator v1.0 - Page {} - Image {} out of {} ({:.2f}%) - {} {:.2f}% - Remaining {}'.format(
+                    #     i, total_pages, i*bs, total, 100*i*bs/total, current_key, annotations_length_percent, time.strftime("%H:%M:%S", time.gmtime(remaining_time))))
                     f.canvas.draw()
 
-                global event_dict
-
-                if event.key in event_dict.keys():
-                    assign_to_key = possible_annotations[event_dict[event.key]]
-                    if type(annotations[assign_to_key]) != 'set':
-                        annotations[assign_to_key] = set(annotations[assign_to_key])
-                    annotations[assign_to_key].add(d[1][0])
-                    plt.close()
-            
+            f.canvas.mpl_connect('button_press_event', onclick)
             f.canvas.mpl_connect('key_press_event', on_press)
 
             if i-substract != 0:
@@ -150,7 +208,7 @@ if __name__ == '__main__':
             seen = (i+1)*bs
             annotations_length_percent = 100*annotations_length/seen
 
-            plt.title('Annotator v1.0 - Page {}/{} - Image {} out of {} ({:.2f}%) - {} {:.2f}% - Remaining {}'.format(
+            plt.suptitle('Annotator v1.0 - Page {}/{} - Image {} out of {} ({:.2f}%) - {} {:.2f}% - Remaining {}'.format(
                 i, total_pages, i*bs, total, 100*i*bs/total, current_key, annotations_length_percent, time.strftime("%H:%M:%S", time.gmtime(remaining_time))))
             plt.tight_layout()
             if hasattr(sys, 'getwindowsversion'):
