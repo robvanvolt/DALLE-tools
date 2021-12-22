@@ -24,7 +24,7 @@ if __name__ == '__main__':
     print('Press <q> to quit the annotation and <b> to go to the previous image.')
     print()
 
-    event_dict = {'f': 0, 'j': 1, ' ': 2}
+    event_dict = {'w': 0, ' ': 1, 'p': 2}
 
     print('What is your (the annotator) name? The name gets appended to the annotations.json filename. (Default: kendrick)')
     annotator = input()
