@@ -12,7 +12,7 @@ Just clone this repository to your folder and use one of the following commands 
 python annotator.py
 ```
 
-Press <space> to switch to the next page, <c> to change the annotation category or click on the image to add it to the current cateogry and save it in annotations.json. Please upload your annotations.json by creating a push request into community_annotations folder into the folder of the dataset you used (e.g. YFCC100m, or LAION400m etc.), so everyone can use the data for better dataset annotations!
+Press `space` to switch to the next page, `c` to change the annotation category or click on the image to add it to the current cateogry and save it in annotations.json. Please upload your annotations.json by creating a push request into community_annotations folder into the folder of the dataset you used (e.g. YFCC100m, or LAION400m etc.), so everyone can use the data for better dataset annotations!
 If you want to continue to annotate a dataset where someone else already started, just copy the annotations.json from the community_annotations
 folder and the used dataset into the root directory and run the annotator!
 
